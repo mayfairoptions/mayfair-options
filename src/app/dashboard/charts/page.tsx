@@ -5,7 +5,7 @@ export default async function ChartsPage() {
   return (
     <div className="flex flex-col h-full p-8 gap-6">
       <div>
-        <p className="mb-1 text-[10px] tracking-[0.25em] uppercase" style={{ color: "rgba(201,169,110,0.5)" }}>Premium</p>
+        <p className="mb-1 text-[10px] tracking-[0.25em] uppercase" style={{ color: "rgba(201,169,110,0.5)" }}>Members</p>
         <h1 className="text-3xl font-normal" style={{ fontFamily: "var(--font-playfair)", color: "#F0EAD8" }}>
           Live <span className="italic text-gold-gradient">Charts</span>
         </h1>
