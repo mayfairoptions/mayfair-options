@@ -1,87 +1,114 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
+import { useUser } from "@clerk/nextjs";
+import { supabase } from "@/lib/supabase";
 
 type Message = {
   id: string;
+  user_id: string;
   author: string;
   initials: string;
-  text?: string;
-  imageUrl?: string;
-  timeLabel: string;
-  isOwn: boolean;
+  text: string | null;
+  image_url: string | null;
+  created_at: string;
 };
 
-const SEED_MESSAGES: Message[] = [
-  {
-    id: "1",
-    author: "Marcus Reynolds",
-    initials: "MR",
-    text: "NVDA looking strong above $138 — watching for a break of $140 for continuation. Call spread still in play.",
-    timeLabel: "45m ago",
-    isOwn: false,
-  },
-  {
-    id: "2",
-    author: "Priya Sharma",
-    initials: "PS",
-    text: "SPY put spread closed +205%. CPI data was the catalyst. Pre-market brief going out in 10 mins.",
-    timeLabel: "30m ago",
-    isOwn: false,
-  },
-  {
-    id: "3",
-    author: "Jordan Kane",
-    initials: "JK",
-    text: "TSLA 250C still open — up 68% unrealised. Delivery event next week is the key catalyst. Hold.",
-    timeLabel: "12m ago",
-    isOwn: false,
-  },
-];
+function getInitials(name: string) {
+  return name
+    .split(" ")
+    .map((n) => n[0])
+    .join("")
+    .toUpperCase()
+    .slice(0, 2);
+}
+
+function timeAgo(iso: string) {
+  const diff = Math.floor((Date.now() - new Date(iso).getTime()) / 1000);
+  if (diff < 60) return "just now";
+  if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
+  if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
+  return new Date(iso).toLocaleDateString();
+}
 
 export default function ChatUI() {
-  const [messages, setMessages] = useState<Message[]>(SEED_MESSAGES);
+  const { user } = useUser();
+  const [messages, setMessages] = useState<Message[]>([]);
   const [text, setText] = useState("");
+  const [uploading, setUploading] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
   const fileRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    // Load existing messages
+    supabase
+      .from("messages")
+      .select("*")
+      .order("created_at", { ascending: true })
+      .limit(100)
+      .then(({ data }) => {
+        if (data) setMessages(data);
+      });
+
+    // Subscribe to new messages in real time
+    const channel = supabase
+      .channel("messages")
+      .on(
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: "messages" },
+        (payload) => {
+          setMessages((prev) => [...prev, payload.new as Message]);
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, []);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  function sendText(e: React.FormEvent) {
+  const authorName = user
+    ? `${user.firstName ?? ""} ${user.lastName ?? ""}`.trim() || user.username || "Member"
+    : "Member";
+  const authorInitials = getInitials(authorName);
+
+  async function sendText(e: React.FormEvent) {
     e.preventDefault();
-    if (!text.trim()) return;
-    setMessages(prev => [
-      ...prev,
-      {
-        id: Date.now().toString(),
-        author: "You",
-        initials: "ME",
-        text: text.trim(),
-        timeLabel: "just now",
-        isOwn: true,
-      },
-    ]);
+    if (!text.trim() || !user) return;
+    const msg = text.trim();
     setText("");
+    await supabase.from("messages").insert({
+      user_id: user.id,
+      author: authorName,
+      initials: authorInitials,
+      text: msg,
+      image_url: null,
+    });
   }
 
-  function handleImage(e: React.ChangeEvent<HTMLInputElement>) {
+  async function handleImage(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
-    if (!file) return;
-    const url = URL.createObjectURL(file);
-    setMessages(prev => [
-      ...prev,
-      {
-        id: Date.now().toString(),
-        author: "You",
-        initials: "ME",
-        imageUrl: url,
-        timeLabel: "just now",
-        isOwn: true,
-      },
-    ]);
+    if (!file || !user) return;
     e.target.value = "";
+    setUploading(true);
+    const ext = file.name.split(".").pop();
+    const path = `chat/${user.id}-${Date.now()}.${ext}`;
+    const { error } = await supabase.storage.from("uploads").upload(path, file, { upsert: true });
+    if (!error) {
+      const { data: urlData } = supabase.storage.from("uploads").getPublicUrl(path);
+      await supabase.from("messages").insert({
+        user_id: user.id,
+        author: authorName,
+        initials: authorInitials,
+        text: null,
+        image_url: urlData.publicUrl,
+      });
+    }
+    setUploading(false);
   }
 
   return (
@@ -96,64 +123,64 @@ export default function ChatUI() {
       >
         <div className="flex items-center gap-3">
           <span className="h-2 w-2 rounded-full" style={{ background: "#C9A96E", animation: "pulse 2s infinite" }} />
-          <span className="text-xs font-medium" style={{ color: "#E8D5A3" }}>Premium Community</span>
+          <span className="text-xs font-medium" style={{ color: "#E8D5A3" }}>Live Community Chat</span>
         </div>
         <span className="text-[10px] tracking-widest uppercase" style={{ color: "rgba(201,169,110,0.4)" }}>
           {messages.length} messages
         </span>
       </div>
 
-      {/* Notice */}
-      <div
-        className="px-5 py-2.5 text-[10px] text-center shrink-0"
-        style={{ background: "rgba(201,169,110,0.04)", borderBottom: "1px solid rgba(201,169,110,0.07)", color: "rgba(240,234,216,0.35)" }}
-      >
-        Real-time sync requires Supabase — messages below are local preview only
-      </div>
-
       {/* Messages */}
       <div className="flex-1 overflow-y-auto px-5 py-5 flex flex-col gap-5">
-        {messages.map((m) => (
-          <div key={m.id} className={`flex gap-3 ${m.isOwn ? "flex-row-reverse" : ""}`}>
-            {!m.isOwn && (
-              <div
-                className="flex h-8 w-8 shrink-0 items-center justify-center rounded-sm text-[11px] font-semibold"
-                style={{ background: "rgba(201,169,110,0.12)", border: "1px solid rgba(201,169,110,0.2)", color: "#C9A96E" }}
-              >
-                {m.initials}
-              </div>
-            )}
-            <div className={`flex flex-col gap-1 max-w-[75%] ${m.isOwn ? "items-end" : "items-start"}`}>
-              {!m.isOwn && (
-                <span className="text-[10px] font-medium" style={{ color: "rgba(201,169,110,0.7)" }}>{m.author}</span>
-              )}
-              {m.text && (
+        {messages.length === 0 && (
+          <p className="text-center text-xs mt-10" style={{ color: "rgba(240,234,216,0.2)" }}>
+            No messages yet. Be the first to say something.
+          </p>
+        )}
+        {messages.map((m) => {
+          const isOwn = m.user_id === user?.id;
+          return (
+            <div key={m.id} className={`flex gap-3 ${isOwn ? "flex-row-reverse" : ""}`}>
+              {!isOwn && (
                 <div
-                  className="px-4 py-2.5 rounded-sm text-sm leading-relaxed"
-                  style={{
-                    background: m.isOwn ? "rgba(201,169,110,0.12)" : "rgba(240,234,216,0.05)",
-                    border: `1px solid ${m.isOwn ? "rgba(201,169,110,0.25)" : "rgba(240,234,216,0.08)"}`,
-                    color: "rgba(240,234,216,0.8)",
-                    fontWeight: 300,
-                  }}
+                  className="flex h-8 w-8 shrink-0 items-center justify-center rounded-sm text-[11px] font-semibold"
+                  style={{ background: "rgba(201,169,110,0.12)", border: "1px solid rgba(201,169,110,0.2)", color: "#C9A96E" }}
                 >
-                  {m.text}
+                  {m.initials}
                 </div>
               )}
-              {m.imageUrl && (
-                <img
-                  src={m.imageUrl}
-                  alt="shared"
-                  className="max-w-xs rounded-sm object-cover"
-                  style={{ border: "1px solid rgba(201,169,110,0.2)", maxHeight: "200px" }}
-                />
-              )}
-              <span className="text-[10px]" style={{ color: "rgba(240,234,216,0.25)" }}>
-                {m.timeLabel}
-              </span>
+              <div className={`flex flex-col gap-1 max-w-[75%] ${isOwn ? "items-end" : "items-start"}`}>
+                {!isOwn && (
+                  <span className="text-[10px] font-medium" style={{ color: "rgba(201,169,110,0.7)" }}>{m.author}</span>
+                )}
+                {m.text && (
+                  <div
+                    className="px-4 py-2.5 rounded-sm text-sm leading-relaxed"
+                    style={{
+                      background: isOwn ? "rgba(201,169,110,0.12)" : "rgba(240,234,216,0.05)",
+                      border: `1px solid ${isOwn ? "rgba(201,169,110,0.25)" : "rgba(240,234,216,0.08)"}`,
+                      color: "rgba(240,234,216,0.8)",
+                      fontWeight: 300,
+                    }}
+                  >
+                    {m.text}
+                  </div>
+                )}
+                {m.image_url && (
+                  <img
+                    src={m.image_url}
+                    alt="shared"
+                    className="max-w-xs rounded-sm object-cover"
+                    style={{ border: "1px solid rgba(201,169,110,0.2)", maxHeight: "200px" }}
+                  />
+                )}
+                <span className="text-[10px]" style={{ color: "rgba(240,234,216,0.25)" }}>
+                  {timeAgo(m.created_at)}
+                </span>
+              </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
         <div ref={bottomRef} />
       </div>
 
@@ -163,24 +190,32 @@ export default function ChatUI() {
         className="flex items-center gap-3 px-4 py-3 shrink-0"
         style={{ borderTop: "1px solid rgba(201,169,110,0.1)" }}
       >
-        {/* Image upload button */}
         <button
           type="button"
           onClick={() => fileRef.current?.click()}
+          disabled={uploading}
           className="shrink-0 flex h-9 w-9 items-center justify-center rounded-sm transition-all duration-200"
-          style={{ border: "1px solid rgba(201,169,110,0.2)", color: "rgba(201,169,110,0.5)" }}
+          style={{ border: "1px solid rgba(201,169,110,0.2)", color: uploading ? "rgba(201,169,110,0.2)" : "rgba(201,169,110,0.5)" }}
           title="Share image"
         >
-          <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-          </svg>
+          {uploading ? (
+            <svg className="h-4 w-4 animate-spin" fill="none" viewBox="0 0 24 24">
+              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z" />
+            </svg>
+          ) : (
+            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+            </svg>
+          )}
         </button>
         <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={handleImage} />
 
         <input
           value={text}
-          onChange={e => setText(e.target.value)}
-          placeholder="Message the community…"
+          onChange={(e) => setText(e.target.value)}
+          placeholder={user ? "Message the community…" : "Sign in to chat"}
+          disabled={!user}
           className="flex-1 rounded-sm px-4 py-2.5 text-sm outline-none"
           style={{
             background: "rgba(201,169,110,0.04)",
@@ -190,7 +225,8 @@ export default function ChatUI() {
         />
         <button
           type="submit"
-          className="shrink-0 px-5 py-2.5 rounded-sm text-xs tracking-widest uppercase font-medium transition-all duration-200"
+          disabled={!user || !text.trim()}
+          className="shrink-0 px-5 py-2.5 rounded-sm text-xs tracking-widest uppercase font-medium transition-all duration-200 disabled:opacity-40"
           style={{ background: "linear-gradient(135deg, #C9A96E, #9A7A42)", color: "#03060f" }}
         >
           Send
