@@ -25,6 +25,7 @@ export default function GalleryUpload() {
   const [pendingFile, setPendingFile] = useState<File | null>(null);
   const [pendingPreview, setPendingPreview] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
+  const [uploadError, setUploadError] = useState<string | null>(null);
   const [dragging, setDragging] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
 
@@ -51,27 +52,35 @@ export default function GalleryUpload() {
   async function confirmUpload() {
     if (!pendingFile || !pendingTag || !user) return;
     setUploading(true);
+    setUploadError(null);
     const ext = pendingFile.name.split(".").pop();
     const path = `gallery/${user.id}-${Date.now()}.${ext}`;
-    const { error } = await supabase.storage.from("uploads").upload(path, pendingFile, { upsert: true });
-    if (!error) {
-      const { data: urlData } = supabase.storage.from("uploads").getPublicUrl(path);
-      const { data: inserted } = await supabase
-        .from("gallery_items")
-        .insert({
-          user_id: user.id,
-          author: authorName,
-          initials: getInitials(authorName),
-          image_url: urlData.publicUrl,
-          tag: pendingTag,
-        })
-        .select()
-        .single();
-      if (inserted) setItems((prev) => [inserted as GalleryItem, ...prev]);
+    const { error: storageError } = await supabase.storage.from("uploads").upload(path, pendingFile, { upsert: true });
+    if (storageError) {
+      setUploadError(`Storage error: ${storageError.message}`);
+      setUploading(false);
+      return;
     }
-    setPendingFile(null);
-    setPendingPreview(null);
-    setPendingTag(null);
+    const { data: urlData } = supabase.storage.from("uploads").getPublicUrl(path);
+    const { data: inserted, error: dbError } = await supabase
+      .from("gallery_items")
+      .insert({
+        user_id: user.id,
+        author: authorName,
+        initials: getInitials(authorName),
+        image_url: urlData.publicUrl,
+        tag: pendingTag,
+      })
+      .select()
+      .single();
+    if (dbError) {
+      setUploadError(`Database error: ${dbError.message}`);
+    } else if (inserted) {
+      setItems((prev) => [inserted as GalleryItem, ...prev]);
+      setPendingFile(null);
+      setPendingPreview(null);
+      setPendingTag(null);
+    }
     setUploading(false);
   }
 
@@ -168,9 +177,12 @@ export default function GalleryUpload() {
               </button>
             ))}
           </div>
+          {uploadError && (
+            <p className="text-xs text-center" style={{ color: "#f87171" }}>{uploadError}</p>
+          )}
           <div className="flex gap-3">
             <button
-              onClick={() => { setPendingFile(null); setPendingPreview(null); setPendingTag(null); }}
+              onClick={() => { setPendingFile(null); setPendingPreview(null); setPendingTag(null); setUploadError(null); }}
               className="flex-1 py-2.5 rounded-sm text-xs tracking-widest uppercase transition-all duration-200"
               style={{ border: "1px solid rgba(240,234,216,0.1)", color: "rgba(240,234,216,0.3)" }}
             >
