@@ -55,7 +55,7 @@ export default function GalleryUpload() {
     setUploadError(null);
     const ext = pendingFile.name.split(".").pop();
     const path = `gallery/${user.id}-${Date.now()}.${ext}`;
-    const { error: storageError } = await supabase.storage.from("uploads").upload(path, pendingFile, { upsert: true });
+    const { error: storageError } = await supabase.storage.from("uploads").upload(path, pendingFile);
     if (storageError) {
       setUploadError(`Storage error: ${storageError.message}`);
       setUploading(false);

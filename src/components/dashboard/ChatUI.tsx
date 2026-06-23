@@ -97,7 +97,7 @@ export default function ChatUI() {
     setUploading(true);
     const ext = file.name.split(".").pop();
     const path = `chat/${user.id}-${Date.now()}.${ext}`;
-    const { error } = await supabase.storage.from("uploads").upload(path, file, { upsert: true });
+    const { error } = await supabase.storage.from("uploads").upload(path, file);
     if (!error) {
       const { data: urlData } = supabase.storage.from("uploads").getPublicUrl(path);
       await supabase.from("messages").insert({
