@@ -1,3 +1,4 @@
+import {ClerkProvider} from "@clerk/nextjs";
 import type { Metadata } from "next";
 import { Geist } from "next/font/google";
 import { Playfair_Display } from "next/font/google";
@@ -33,7 +34,9 @@ export default function RootLayout({
       className={`${geist.variable} ${playfair.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col" style={{ background: "var(--navy)", color: "#f0ead8" }}>
-        {children}
+        <ClerkProvider>
+          {children}
+        </ClerkProvider>
       </body>
     </html>
   );
