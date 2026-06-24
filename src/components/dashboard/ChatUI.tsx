@@ -31,7 +31,7 @@ function timeAgo(iso: string) {
   return new Date(iso).toLocaleDateString();
 }
 
-export default function ChatUI() {
+export default function ChatUI({ table = "messages" }: { table?: string }) {
   const { user } = useUser();
   const [messages, setMessages] = useState<Message[]>([]);
   const [text, setText] = useState("");
@@ -40,9 +40,8 @@ export default function ChatUI() {
   const fileRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    // Load existing messages
     supabase
-      .from("messages")
+      .from(table)
       .select("*")
       .order("created_at", { ascending: true })
       .limit(100)
@@ -50,12 +49,11 @@ export default function ChatUI() {
         if (data) setMessages(data);
       });
 
-    // Subscribe to new messages in real time
     const channel = supabase
-      .channel("messages")
+      .channel(table)
       .on(
         "postgres_changes",
-        { event: "INSERT", schema: "public", table: "messages" },
+        { event: "INSERT", schema: "public", table },
         (payload) => {
           setMessages((prev) => [...prev, payload.new as Message]);
         }
@@ -65,7 +63,7 @@ export default function ChatUI() {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, []);
+  }, [table]);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -81,7 +79,7 @@ export default function ChatUI() {
     if (!text.trim() || !user) return;
     const msg = text.trim();
     setText("");
-    await supabase.from("messages").insert({
+    await supabase.from(table).insert({
       user_id: user.id,
       author: authorName,
       initials: authorInitials,
@@ -100,7 +98,7 @@ export default function ChatUI() {
     const { error } = await supabase.storage.from("uploads").upload(path, file);
     if (!error) {
       const { data: urlData } = supabase.storage.from("uploads").getPublicUrl(path);
-      await supabase.from("messages").insert({
+      await supabase.from(table).insert({
         user_id: user.id,
         author: authorName,
         initials: authorInitials,
