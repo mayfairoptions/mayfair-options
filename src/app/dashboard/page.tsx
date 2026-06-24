@@ -9,7 +9,7 @@ export default async function DashboardPage() {
   const firstName = user?.firstName ?? "Trader";
 
   return (
-    <div className="p-8 max-w-5xl">
+    <div className="p-4 md:p-8 max-w-5xl">
       {/* Welcome */}
       <div className="mb-10">
         <p className="mb-1 text-[10px] tracking-[0.25em] uppercase" style={{ color: "rgba(201,169,110,0.5)" }}>

@@ -99,19 +99,19 @@ export default function Hero() {
           {/* ── LEFT: copy ── */}
           <div className="flex flex-col items-start">
             <h1
-              className="mb-3 text-5xl font-normal leading-[1.1] tracking-tight sm:text-6xl xl:text-[72px]"
+              className="mb-3 text-4xl font-normal leading-[1.1] tracking-tight sm:text-5xl xl:text-[72px]"
               style={{ fontFamily: "var(--font-playfair)", color: "#F0EAD8" }}
             >
               Professional
             </h1>
             <h1
-              className="mb-3 text-5xl font-normal leading-[1.1] italic sm:text-6xl xl:text-[72px]"
+              className="mb-3 text-4xl font-normal leading-[1.1] italic sm:text-5xl xl:text-[72px]"
               style={{ fontFamily: "var(--font-playfair)" }}
             >
               <span className="text-gold-gradient">Options Trading</span>
             </h1>
             <h1
-              className="mb-10 text-5xl font-normal leading-[1.1] tracking-tight sm:text-6xl xl:text-[72px]"
+              className="mb-8 text-4xl font-normal leading-[1.1] tracking-tight sm:text-5xl xl:text-[72px]"
               style={{ fontFamily: "var(--font-playfair)", color: "#F0EAD8" }}
             >
               Community
@@ -193,7 +193,7 @@ export default function Hero() {
           </div>
 
           {/* ── RIGHT: dashboard visual ── */}
-          <div className="relative flex justify-center lg:justify-end">
+          <div className="hidden lg:relative lg:flex justify-center lg:justify-end">
             {/* Outer glow */}
             <div
               className="pointer-events-none absolute inset-0 rounded-sm"
