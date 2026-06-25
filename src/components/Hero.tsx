@@ -138,7 +138,7 @@ export default function Hero() {
             {/* CTAs */}
             <div className="flex flex-col gap-4 sm:flex-row">
               <a
-                href="#pricing"
+                href="/sign-up"
                 className="inline-flex items-center justify-center gap-3 px-8 py-4 rounded-sm text-xs tracking-[0.2em] uppercase font-medium transition-all duration-300"
                 style={{
                   background: "linear-gradient(135deg, #C9A96E 0%, #9A7A42 100%)",

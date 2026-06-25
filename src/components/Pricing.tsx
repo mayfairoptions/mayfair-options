@@ -1,22 +1,21 @@
 "use client";
 
 const free = [
-  "Weekly recap digest (48h delay)",
-  "Community Discord access",
-  "Monthly webinar replay",
-  "Basic educational resources",
-  "Public analyst leaderboard",
+  "Live TradingView charts — search any ticker",
+  "Community chat with fellow members",
+  "Win / Loss trade screenshot gallery",
+  "Analyst performance leaderboard",
+  "Weekly recap breakdowns",
 ];
 
 const premium = [
-  "Live trade alerts (real-time)",
-  "Full analyst tracker & all statistics",
-  "Weekly Best Plays breakdown",
-  "Private Discord with all analysts",
-  "Daily pre-market briefing",
-  "Options flow scanner access",
-  "1-on-1 onboarding session",
-  "Priority support channel",
+  "Everything in Free",
+  "Real-time analyst trade alerts",
+  "Daily pre-market briefings",
+  "Exclusive options flow data",
+  "Private premium chat with analysts",
+  "Pre-built Mayfair TradingView indicators",
+  "Analyst selection — follow who you want",
 ];
 
 export default function Pricing() {
@@ -74,7 +73,7 @@ export default function Pricing() {
             </ul>
 
             <a
-              href="#"
+              href="/sign-up"
               className="w-full py-4 text-center text-xs tracking-[0.2em] uppercase transition-all duration-300"
               style={{
                 border: "1px solid rgba(201,169,110,0.2)",
@@ -148,7 +147,7 @@ export default function Pricing() {
             </ul>
 
             <a
-              href="#"
+              href="/sign-up"
               className="w-full py-4 text-center text-xs tracking-[0.2em] uppercase font-medium transition-all duration-300"
               style={{
                 background: "linear-gradient(135deg, #C9A96E 0%, #9A7A42 50%, #C9A96E 100%)",
