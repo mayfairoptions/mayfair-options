@@ -147,7 +147,7 @@ export default function Hero() {
                   boxShadow: "0 8px 32px rgba(201,169,110,0.25), inset 0 1px 0 rgba(255,255,255,0.15)",
                 }}
               >
-                Join Premium
+                Get Started
                 <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
                 </svg>

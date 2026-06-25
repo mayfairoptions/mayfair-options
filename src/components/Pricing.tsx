@@ -164,7 +164,7 @@ export default function Pricing() {
                 (e.currentTarget as HTMLElement).style.boxShadow = "0 8px 32px rgba(201,169,110,0.2)";
               }}
             >
-              Join Premium
+              Get Started
             </a>
           </div>
         </div>

@@ -181,7 +181,7 @@ export default function Sidebar({ isPremium }: { isPremium: boolean }) {
             </a>
           ))}
 
-          {premiumLinks.length > 0 && (
+          {isPremium && premiumLinks.length > 0 && (
             <>
               <p className="mb-2 mt-6 px-3 text-[9px] tracking-[0.25em] uppercase" style={{ color: "rgba(201,169,110,0.35)" }}>
                 Premium
@@ -237,7 +237,7 @@ export default function Sidebar({ isPremium }: { isPremium: boolean }) {
         }}
       >
         <div className="flex items-center overflow-x-auto scrollbar-hide px-2 py-2 gap-1">
-          {[...freeLinks, ...premiumLinks].map((l) => {
+          {[...freeLinks, ...(isPremium ? premiumLinks : [])].map((l) => {
             const active = isActive(l.href);
             const isPrem = premiumLinks.some((p) => p.href === l.href);
             return (
