@@ -4,121 +4,180 @@ import { usePathname } from "next/navigation";
 import Image from "next/image";
 import { UserButton } from "@clerk/nextjs";
 
-const freeLinks = [
+type NavLink = {
+  href: string;
+  label: string;
+  shortLabel: string;
+  free: boolean;
+  icon: React.ReactNode;
+};
+
+type Section = {
+  label: string;
+  links: NavLink[];
+};
+
+const overview: NavLink = {
+  href: "/dashboard",
+  label: "Overview",
+  shortLabel: "Home",
+  free: true,
+  icon: (
+    <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+    </svg>
+  ),
+};
+
+const sections: Section[] = [
   {
-    href: "/dashboard",
-    label: "Overview",
-    shortLabel: "Home",
-    icon: (
-      <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
-      </svg>
-    ),
+    label: "Markets",
+    links: [
+      {
+        href: "/dashboard/charts",
+        label: "Live Charts",
+        shortLabel: "Charts",
+        free: true,
+        icon: (
+          <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+          </svg>
+        ),
+      },
+      {
+        href: "/dashboard/flow",
+        label: "Options Flow",
+        shortLabel: "Flow",
+        free: false,
+        icon: (
+          <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4" />
+          </svg>
+        ),
+      },
+    ],
   },
   {
-    href: "/dashboard/recaps",
-    label: "Weekly Recaps",
-    shortLabel: "Recaps",
-    icon: (
-      <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-      </svg>
-    ),
+    label: "Community",
+    links: [
+      {
+        href: "/dashboard/chat",
+        label: "Community Chat",
+        shortLabel: "Chat",
+        free: true,
+        icon: (
+          <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+          </svg>
+        ),
+      },
+      {
+        href: "/dashboard/gallery",
+        label: "Win/Loss Gallery",
+        shortLabel: "Gallery",
+        free: true,
+        icon: (
+          <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+          </svg>
+        ),
+      },
+      {
+        href: "/dashboard/leaderboard",
+        label: "Leaderboard",
+        shortLabel: "Ranks",
+        free: true,
+        icon: (
+          <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+          </svg>
+        ),
+      },
+      {
+        href: "/dashboard/premium-chat",
+        label: "Premium Chat",
+        shortLabel: "VIP",
+        free: false,
+        icon: (
+          <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
+          </svg>
+        ),
+      },
+    ],
   },
   {
-    href: "/dashboard/leaderboard",
-    label: "Leaderboard",
-    shortLabel: "Ranks",
-    icon: (
-      <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-      </svg>
-    ),
+    label: "Analysis",
+    links: [
+      {
+        href: "/dashboard/recaps",
+        label: "Weekly Recaps",
+        shortLabel: "Recaps",
+        free: true,
+        icon: (
+          <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+          </svg>
+        ),
+      },
+      {
+        href: "/dashboard/alerts",
+        label: "Live Alerts",
+        shortLabel: "Alerts",
+        free: false,
+        icon: (
+          <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+          </svg>
+        ),
+      },
+      {
+        href: "/dashboard/briefing",
+        label: "Pre-Market Briefing",
+        shortLabel: "Brief",
+        free: false,
+        icon: (
+          <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364-6.364l-.707.707M6.343 6.343l-.707-.707m12.728 12.728l-.707-.707M6.343 17.657l-.707.707M12 8a4 4 0 100 8 4 4 0 000-8z" />
+          </svg>
+        ),
+      },
+    ],
   },
   {
-    href: "/dashboard/charts",
-    label: "Live Charts",
-    shortLabel: "Charts",
-    icon: (
-      <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
-      </svg>
-    ),
-  },
-  {
-    href: "/dashboard/chat",
-    label: "Community Chat",
-    shortLabel: "Chat",
-    icon: (
-      <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-      </svg>
-    ),
-  },
-  {
-    href: "/dashboard/gallery",
-    label: "Win/Loss Gallery",
-    shortLabel: "Gallery",
-    icon: (
-      <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-      </svg>
-    ),
+    label: "Tools",
+    links: [
+      {
+        href: "/dashboard/indicators",
+        label: "Indicators",
+        shortLabel: "Tools",
+        free: false,
+        icon: (
+          <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" /><path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+          </svg>
+        ),
+      },
+    ],
   },
 ];
 
-const premiumLinks = [
-  {
-    href: "/dashboard/alerts",
-    label: "Live Alerts",
-    shortLabel: "Alerts",
-    icon: (
-      <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
-      </svg>
-    ),
-  },
-  {
-    href: "/dashboard/briefing",
-    label: "Pre-Market Briefing",
-    shortLabel: "Brief",
-    icon: (
-      <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364-6.364l-.707.707M6.343 6.343l-.707-.707m12.728 12.728l-.707-.707M6.343 17.657l-.707.707M12 8a4 4 0 100 8 4 4 0 000-8z" />
-      </svg>
-    ),
-  },
-  {
-    href: "/dashboard/flow",
-    label: "Options Flow",
-    shortLabel: "Flow",
-    icon: (
-      <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4" />
-      </svg>
-    ),
-  },
-  {
-    href: "/dashboard/premium-chat",
-    label: "Premium Chat",
-    shortLabel: "VIP",
-    icon: (
-      <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
-      </svg>
-    ),
-  },
-  {
-    href: "/dashboard/indicators",
-    label: "Indicators",
-    shortLabel: "Tools",
-    icon: (
-      <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" /><path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-      </svg>
-    ),
-  },
-];
+function NavItem({ link, active }: { link: NavLink; active: boolean }) {
+  return (
+    <a
+      href={link.href}
+      className="flex items-center gap-3 rounded-sm px-3 py-2.5 text-xs tracking-wide transition-all duration-200"
+      style={{
+        background: active ? "rgba(201,169,110,0.1)" : "transparent",
+        color: active ? "#C9A96E" : "rgba(240,234,216,0.5)",
+        borderLeft: active ? "2px solid #C9A96E" : "2px solid transparent",
+      }}
+    >
+      {link.icon}
+      {link.label}
+    </a>
+  );
+}
 
 export default function Sidebar({ isPremium }: { isPremium: boolean }) {
   const pathname = usePathname();
@@ -126,20 +185,24 @@ export default function Sidebar({ isPremium }: { isPremium: boolean }) {
   const isActive = (href: string) =>
     href === "/dashboard" ? pathname === "/dashboard" : pathname.startsWith(href);
 
+  const visibleSections = sections.map((s) => ({
+    ...s,
+    links: s.links.filter((l) => l.free || isPremium),
+  })).filter((s) => s.links.length > 0);
+
+  const allVisibleLinks = [overview, ...visibleSections.flatMap((s) => s.links)];
+
   return (
     <>
       {/* ── Desktop sidebar ── */}
       <aside
         className="hidden md:flex h-screen w-64 shrink-0 flex-col"
-        style={{
-          background: "var(--navy-2)",
-          borderRight: "1px solid rgba(201,169,110,0.1)",
-        }}
+        style={{ background: "var(--navy-2)", borderRight: "1px solid rgba(201,169,110,0.1)" }}
       >
         {/* Logo */}
         <a
           href="/"
-          className="flex items-center gap-3 px-6 py-5"
+          className="flex items-center gap-3 px-6 py-5 shrink-0"
           style={{ borderBottom: "1px solid rgba(201,169,110,0.08)" }}
         >
           <Image
@@ -161,57 +224,31 @@ export default function Sidebar({ isPremium }: { isPremium: boolean }) {
         </a>
 
         {/* Nav */}
-        <nav className="flex flex-col gap-1 flex-1 overflow-y-auto px-3 py-5">
-          <p className="mb-2 px-3 text-[9px] tracking-[0.25em] uppercase" style={{ color: "rgba(201,169,110,0.35)" }}>
-            Members
-          </p>
-          {freeLinks.map((l) => (
-            <a
-              key={l.href}
-              href={l.href}
-              className="flex items-center gap-3 rounded-sm px-3 py-2.5 text-xs tracking-wide transition-all duration-200"
-              style={{
-                background: isActive(l.href) ? "rgba(201,169,110,0.1)" : "transparent",
-                color: isActive(l.href) ? "#C9A96E" : "rgba(240,234,216,0.5)",
-                borderLeft: isActive(l.href) ? "2px solid #C9A96E" : "2px solid transparent",
-              }}
-            >
-              {l.icon}
-              {l.label}
-            </a>
-          ))}
+        <nav className="flex flex-col flex-1 overflow-y-auto px-3 py-4 gap-5">
+          {/* Overview */}
+          <NavItem link={overview} active={isActive(overview.href)} />
 
-          {isPremium && premiumLinks.length > 0 && (
-            <>
-              <p className="mb-2 mt-6 px-3 text-[9px] tracking-[0.25em] uppercase" style={{ color: "rgba(201,169,110,0.35)" }}>
-                Premium
+          {/* Sections */}
+          {visibleSections.map((section) => (
+            <div key={section.label} className="flex flex-col gap-1">
+              <p
+                className="px-3 pb-1 text-[9px] tracking-[0.25em] uppercase"
+                style={{ color: "rgba(201,169,110,0.35)" }}
+              >
+                {section.label}
               </p>
-              {premiumLinks.map((l) => (
-                <a
-                  key={l.href}
-                  href={isPremium ? l.href : "/dashboard"}
-                  className="flex items-center gap-3 rounded-sm px-3 py-2.5 text-xs tracking-wide transition-all duration-200"
-                  style={{
-                    background: isActive(l.href) && isPremium ? "rgba(201,169,110,0.1)" : "transparent",
-                    color: isActive(l.href) && isPremium ? "#C9A96E" : isPremium ? "rgba(240,234,216,0.5)" : "rgba(240,234,216,0.25)",
-                    borderLeft: isActive(l.href) && isPremium ? "2px solid #C9A96E" : "2px solid transparent",
-                  }}
-                >
-                  {l.icon}
-                  {l.label}
-                  {!isPremium && (
-                    <span className="ml-auto text-[9px] tracking-widest uppercase px-1.5 py-0.5 rounded-sm" style={{ border: "1px solid rgba(201,169,110,0.2)", color: "rgba(201,169,110,0.4)" }}>
-                      Pro
-                    </span>
-                  )}
-                </a>
+              {section.links.map((l) => (
+                <NavItem key={l.href} link={l} active={isActive(l.href)} />
               ))}
-            </>
-          )}
+            </div>
+          ))}
         </nav>
 
         {/* User + plan */}
-        <div className="px-4 py-4 flex items-center gap-3" style={{ borderTop: "1px solid rgba(201,169,110,0.08)" }}>
+        <div
+          className="px-4 py-4 flex items-center gap-3 shrink-0"
+          style={{ borderTop: "1px solid rgba(201,169,110,0.08)" }}
+        >
           <UserButton appearance={{ elements: { avatarBox: "h-8 w-8 rounded-sm" } }} />
           <div className="flex-1 min-w-0">
             <div className="text-xs truncate" style={{ color: "rgba(240,234,216,0.6)" }}>My Account</div>
@@ -230,22 +267,17 @@ export default function Sidebar({ isPremium }: { isPremium: boolean }) {
       {/* ── Mobile bottom nav ── */}
       <nav
         className="md:hidden fixed bottom-0 left-0 right-0 z-50"
-        style={{
-          background: "rgba(8,13,26,0.97)",
-          borderTop: "1px solid rgba(201,169,110,0.12)",
-          backdropFilter: "blur(20px)",
-        }}
+        style={{ background: "rgba(8,13,26,0.97)", borderTop: "1px solid rgba(201,169,110,0.12)", backdropFilter: "blur(20px)" }}
       >
-        <div className="flex items-center overflow-x-auto scrollbar-hide px-2 py-2 gap-1">
-          {[...freeLinks, ...(isPremium ? premiumLinks : [])].map((l) => {
+        <div className="flex items-center overflow-x-auto px-2 py-2 gap-1">
+          {allVisibleLinks.map((l) => {
             const active = isActive(l.href);
-            const isPrem = premiumLinks.some((p) => p.href === l.href);
             return (
               <a
                 key={l.href}
                 href={l.href}
                 className="flex flex-col items-center gap-1 px-3 py-1 rounded-sm transition-all duration-200 shrink-0"
-                style={{ color: active ? "#C9A96E" : isPrem ? "rgba(201,169,110,0.4)" : "rgba(240,234,216,0.35)" }}
+                style={{ color: active ? "#C9A96E" : "rgba(240,234,216,0.35)" }}
               >
                 {l.icon}
                 <span className="text-[9px] tracking-wide whitespace-nowrap">{l.shortLabel}</span>
