@@ -1,6 +1,7 @@
 "use client";
 
 import { usePathname } from "next/navigation";
+import { useState } from "react";
 import Image from "next/image";
 import { UserButton } from "@clerk/nextjs";
 
@@ -185,12 +186,18 @@ export default function Sidebar({ isPremium }: { isPremium: boolean }) {
   const isActive = (href: string) =>
     href === "/dashboard" ? pathname === "/dashboard" : pathname.startsWith(href);
 
+  const [drawerOpen, setDrawerOpen] = useState(false);
+
   const visibleSections = sections.map((s) => ({
     ...s,
     links: s.links.filter((l) => l.free || isPremium),
   })).filter((s) => s.links.length > 0);
 
-  const allVisibleLinks = [overview, ...visibleSections.flatMap((s) => s.links)];
+  // 4 pinned tabs for mobile — always the most-used links
+  const pinnedTabs = [
+    overview,
+    ...visibleSections.flatMap((s) => s.links),
+  ].slice(0, 4);
 
   return (
     <>
@@ -264,32 +271,130 @@ export default function Sidebar({ isPremium }: { isPremium: boolean }) {
         </div>
       </aside>
 
-      {/* ── Mobile bottom nav ── */}
+      {/* ── Mobile bottom tab bar ── */}
       <nav
-        className="md:hidden fixed bottom-0 left-0 right-0 z-50"
+        className="md:hidden fixed bottom-0 left-0 right-0 z-50 flex items-center justify-around px-1 py-2"
         style={{ background: "rgba(8,13,26,0.97)", borderTop: "1px solid rgba(201,169,110,0.12)", backdropFilter: "blur(20px)" }}
       >
-        <div className="flex items-center overflow-x-auto px-2 py-2 gap-1">
-          {allVisibleLinks.map((l) => {
-            const active = isActive(l.href);
-            return (
-              <a
-                key={l.href}
-                href={l.href}
-                className="flex flex-col items-center gap-1 px-3 py-1 rounded-sm transition-all duration-200 shrink-0"
-                style={{ color: active ? "#C9A96E" : "rgba(240,234,216,0.35)" }}
-              >
-                {l.icon}
-                <span className="text-[9px] tracking-wide whitespace-nowrap">{l.shortLabel}</span>
-              </a>
-            );
-          })}
-          <div className="flex flex-col items-center gap-1 px-3 py-1 shrink-0">
-            <UserButton appearance={{ elements: { avatarBox: "h-4 w-4 rounded-sm" } }} />
-            <span className="text-[9px] tracking-wide" style={{ color: "rgba(240,234,216,0.35)" }}>Account</span>
-          </div>
-        </div>
+        {pinnedTabs.map((l) => {
+          const active = isActive(l.href);
+          return (
+            <a
+              key={l.href}
+              href={l.href}
+              className="flex flex-col items-center gap-1 flex-1 py-1 transition-all duration-200"
+              style={{ color: active ? "#C9A96E" : "rgba(240,234,216,0.35)" }}
+            >
+              {l.icon}
+              <span className="text-[9px] tracking-wide">{l.shortLabel}</span>
+            </a>
+          );
+        })}
+
+        {/* Menu button */}
+        <button
+          onClick={() => setDrawerOpen(true)}
+          className="flex flex-col items-center gap-1 flex-1 py-1 transition-all duration-200"
+          style={{ color: drawerOpen ? "#C9A96E" : "rgba(240,234,216,0.35)" }}
+        >
+          <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" />
+          </svg>
+          <span className="text-[9px] tracking-wide">Menu</span>
+        </button>
       </nav>
+
+      {/* ── Mobile slide-up drawer ── */}
+      {drawerOpen && (
+        <>
+          {/* Backdrop */}
+          <div
+            className="md:hidden fixed inset-0 z-50"
+            style={{ background: "rgba(3,6,15,0.7)", backdropFilter: "blur(4px)" }}
+            onClick={() => setDrawerOpen(false)}
+          />
+          {/* Drawer */}
+          <div
+            className="md:hidden fixed bottom-0 left-0 right-0 z-50 rounded-t-lg overflow-hidden"
+            style={{ background: "var(--navy-2)", border: "1px solid rgba(201,169,110,0.15)", maxHeight: "80vh" }}
+          >
+            {/* Handle */}
+            <div className="flex justify-center pt-3 pb-2">
+              <div className="h-1 w-10 rounded-full" style={{ background: "rgba(201,169,110,0.25)" }} />
+            </div>
+
+            {/* Header */}
+            <div className="flex items-center justify-between px-5 pb-4" style={{ borderBottom: "1px solid rgba(201,169,110,0.08)" }}>
+              <div className="flex items-center gap-3">
+                <Image src="/logo.png" alt="Mayfair Options" width={24} height={24} className="object-contain" style={{ filter: "drop-shadow(0 0 4px rgba(201,169,110,0.3))" }} />
+                <span className="text-sm font-semibold" style={{ fontFamily: "var(--font-playfair)", color: "#E8D5A3" }}>Mayfair Options</span>
+              </div>
+              <button onClick={() => setDrawerOpen(false)} style={{ color: "rgba(240,234,216,0.3)" }}>
+                <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+
+            {/* Nav links */}
+            <div className="overflow-y-auto px-4 py-4 flex flex-col gap-4" style={{ maxHeight: "calc(80vh - 120px)" }}>
+              <a
+                href={overview.href}
+                onClick={() => setDrawerOpen(false)}
+                className="flex items-center gap-3 px-3 py-3 rounded-sm text-sm transition-all duration-200"
+                style={{
+                  background: isActive(overview.href) ? "rgba(201,169,110,0.1)" : "transparent",
+                  color: isActive(overview.href) ? "#C9A96E" : "rgba(240,234,216,0.6)",
+                  borderLeft: isActive(overview.href) ? "2px solid #C9A96E" : "2px solid transparent",
+                }}
+              >
+                {overview.icon}
+                {overview.label}
+              </a>
+
+              {visibleSections.map((section) => (
+                <div key={section.label} className="flex flex-col gap-1">
+                  <p className="px-3 pb-1 text-[9px] tracking-[0.25em] uppercase" style={{ color: "rgba(201,169,110,0.35)" }}>
+                    {section.label}
+                  </p>
+                  {section.links.map((l) => (
+                    <a
+                      key={l.href}
+                      href={l.href}
+                      onClick={() => setDrawerOpen(false)}
+                      className="flex items-center gap-3 px-3 py-3 rounded-sm text-sm transition-all duration-200"
+                      style={{
+                        background: isActive(l.href) ? "rgba(201,169,110,0.1)" : "transparent",
+                        color: isActive(l.href) ? "#C9A96E" : "rgba(240,234,216,0.5)",
+                        borderLeft: isActive(l.href) ? "2px solid #C9A96E" : "2px solid transparent",
+                      }}
+                    >
+                      {l.icon}
+                      {l.label}
+                    </a>
+                  ))}
+                </div>
+              ))}
+
+              {/* User row */}
+              <div className="flex items-center gap-3 px-3 py-3 mt-2" style={{ borderTop: "1px solid rgba(201,169,110,0.08)" }}>
+                <UserButton appearance={{ elements: { avatarBox: "h-8 w-8 rounded-sm" } }} />
+                <div className="flex-1 min-w-0">
+                  <div className="text-xs" style={{ color: "rgba(240,234,216,0.6)" }}>My Account</div>
+                  <div className="text-[10px] tracking-widest uppercase" style={{ color: isPremium ? "#C9A96E" : "rgba(240,234,216,0.3)" }}>
+                    {isPremium ? "Premium" : "Free"}
+                  </div>
+                </div>
+                <a href="/" style={{ color: "rgba(240,234,216,0.3)" }} title="Back to site">
+                  <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                  </svg>
+                </a>
+              </div>
+            </div>
+          </div>
+        </>
+      )}
     </>
   );
 }
