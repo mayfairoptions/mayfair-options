@@ -42,7 +42,7 @@ const recentAlerts = [
   { ticker: "TSLA", type: "Call",        ret: "+68%",  time: "3h ago", positive: true },
 ];
 
-const tickers = [
+const FALLBACK_TICKERS = [
   { sym: "QQQ",  val: "473.55", chg: "+1.12%" },
   { sym: "SPY",  val: "541.20", chg: "+0.84%" },
   { sym: "AMD",  val: "162.40", chg: "+1.93%" },
@@ -53,11 +53,48 @@ const tickers = [
   { sym: "VIX",  val: "13.82",  chg: "-4.20%" },
 ];
 
+const TICKER_SYMBOLS: Array<{ sym: string; apiSym: string }> = [
+  { sym: "QQQ",  apiSym: "QQQ"  },
+  { sym: "SPY",  apiSym: "SPY"  },
+  { sym: "AMD",  apiSym: "AMD"  },
+  { sym: "NVDA", apiSym: "NVDA" },
+  { sym: "SPCX", apiSym: "SPCX" },
+  { sym: "TSLA", apiSym: "TSLA" },
+  { sym: "AAPL", apiSym: "AAPL" },
+  { sym: "VIX",  apiSym: "^VIX" },
+];
+
 export default function Hero() {
   const pathRef = useRef<SVGPathElement>(null);
   const [pathLen, setPathLen] = useState(0);
   const [drawn, setDrawn] = useState(false);
   const [activeAlert, setActiveAlert] = useState(0);
+  const [tickers, setTickers] = useState(FALLBACK_TICKERS);
+
+  useEffect(() => {
+    async function loadTickers() {
+      try {
+        const res = await fetch("/api/market-data");
+        if (!res.ok) return;
+        const data = await res.json();
+        const quotes = data?.quotes ?? {};
+        const live = TICKER_SYMBOLS.map(({ sym, apiSym }) => {
+          const q = quotes[apiSym];
+          if (!q) return FALLBACK_TICKERS.find((t) => t.sym === sym) ?? { sym, val: "—", chg: "—" };
+          const chg = q.changePercent;
+          return {
+            sym,
+            val: q.price.toFixed(2),
+            chg: `${chg >= 0 ? "+" : ""}${chg.toFixed(2)}%`,
+          };
+        });
+        setTickers(live);
+      } catch {}
+    }
+    loadTickers();
+    const id = setInterval(loadTickers, 60_000);
+    return () => clearInterval(id);
+  }, []);
 
   useEffect(() => {
     if (pathRef.current) {
