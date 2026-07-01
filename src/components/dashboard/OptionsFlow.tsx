@@ -1,43 +1,100 @@
 "use client";
 
-import { useState } from "react";
-
-type Flow = {
-  time: string;
-  ticker: string;
-  type: "Call" | "Put";
-  strike: string;
-  expiry: string;
-  premium: string;
-  volume: string;
-  oi: string;
-  sentiment: "Bullish" | "Bearish" | "Neutral";
-};
-
-const FLOW: Flow[] = [
-  { time: "9:31",  ticker: "NVDA", type: "Call", strike: "$145C", expiry: "Jul 18", premium: "$2.4M", volume: "18,400", oi: "4,200",  sentiment: "Bullish" },
-  { time: "9:34",  ticker: "SPY",  type: "Put",  strike: "$525P", expiry: "Jul 11", premium: "$1.8M", volume: "22,100", oi: "9,800",  sentiment: "Bearish" },
-  { time: "9:41",  ticker: "TSLA", type: "Call", strike: "$260C", expiry: "Jul 25", premium: "$3.1M", volume: "11,500", oi: "2,900",  sentiment: "Bullish" },
-  { time: "9:55",  ticker: "AAPL", type: "Call", strike: "$215C", expiry: "Aug 15", premium: "$5.6M", volume: "31,200", oi: "12,400", sentiment: "Bullish" },
-  { time: "10:02", ticker: "AMD",  type: "Put",  strike: "$155P", expiry: "Jul 18", premium: "$0.9M", volume: "8,700",  oi: "3,100",  sentiment: "Bearish" },
-  { time: "10:14", ticker: "QQQ",  type: "Call", strike: "$480C", expiry: "Jul 18", premium: "$4.2M", volume: "26,800", oi: "7,600",  sentiment: "Bullish" },
-  { time: "10:28", ticker: "META", type: "Call", strike: "$550C", expiry: "Aug 15", premium: "$6.1M", volume: "14,300", oi: "3,800",  sentiment: "Bullish" },
-  { time: "10:35", ticker: "VIX",  type: "Call", strike: "$18C",  expiry: "Jul 16", premium: "$1.2M", volume: "42,000", oi: "18,500", sentiment: "Bearish" },
-  { time: "10:49", ticker: "MSFT", type: "Put",  strike: "$415P", expiry: "Jul 18", premium: "$2.7M", volume: "9,400",  oi: "4,200",  sentiment: "Bearish" },
-  { time: "11:03", ticker: "GOOGL",type: "Call", strike: "$190C", expiry: "Aug 15", premium: "$3.8M", volume: "17,600", oi: "6,100",  sentiment: "Bullish" },
-];
+import { useEffect, useState } from "react";
+import type { FlowItem } from "@/app/api/options-flow/route";
 
 type Filter = "All" | "Bullish" | "Bearish";
 
-export default function OptionsFlow() {
-  const [filter, setFilter] = useState<Filter>("All");
+function fmtPremium(n: number): string {
+  if (n >= 1_000_000) return `$${(n / 1_000_000).toFixed(1)}M`;
+  if (n >= 1_000)     return `$${(n / 1_000).toFixed(0)}K`;
+  return `$${n.toFixed(0)}`;
+}
 
-  const visible = filter === "All" ? FLOW : FLOW.filter((f) => f.sentiment === filter);
+function PulsingDot() {
+  return (
+    <span className="relative flex h-2 w-2">
+      <span className="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75" style={{ background: "#4ade80" }} />
+      <span className="relative inline-flex rounded-full h-2 w-2" style={{ background: "#4ade80" }} />
+    </span>
+  );
+}
+
+export default function OptionsFlow() {
+  const [filter, setFilter]   = useState<Filter>("All");
+  const [flow, setFlow]       = useState<FlowItem[]>([]);
+  const [callPrem, setCallPrem] = useState(0);
+  const [putPrem, setPutPrem]   = useState(0);
+  const [loading, setLoading] = useState(true);
+  const [lastUpdate, setLastUpdate] = useState<Date | null>(null);
+
+  useEffect(() => {
+    async function load() {
+      try {
+        const res = await fetch("/api/options-flow");
+        if (res.ok) {
+          const data = await res.json();
+          setFlow(data.flow ?? []);
+          setCallPrem(data.callPremium ?? 0);
+          setPutPrem(data.putPremium ?? 0);
+          setLastUpdate(new Date(data.ts));
+        }
+      } finally {
+        setLoading(false);
+      }
+    }
+    load();
+    const id = setInterval(load, 2 * 60_000); // refresh every 2 min
+    return () => clearInterval(id);
+  }, []);
+
+  const visible = filter === "All" ? flow : flow.filter((f) => f.sentiment === filter);
+  const totalPrem = callPrem + putPrem;
+  const callPct = totalPrem > 0 ? Math.round((callPrem / totalPrem) * 100) : 50;
 
   return (
     <div className="flex flex-col gap-5">
+
+      {/* Premium ratio bar */}
+      <div
+        className="rounded-sm p-4"
+        style={{ border: "1px solid rgba(201,169,110,0.1)", background: "rgba(8,13,26,0.6)" }}
+      >
+        <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center gap-2">
+            <p className="text-[9px] tracking-[0.25em] uppercase" style={{ color: "rgba(201,169,110,0.5)" }}>
+              Premium Flow
+            </p>
+            {!loading && <PulsingDot />}
+          </div>
+          {lastUpdate && (
+            <span className="text-[9px]" style={{ color: "rgba(240,234,216,0.2)" }}>
+              {lastUpdate.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", hour12: true })}
+            </span>
+          )}
+        </div>
+        <div className="flex items-center gap-3">
+          <span className="text-xs w-20 text-right" style={{ color: "#4ade80" }}>
+            {loading ? "…" : `${fmtPremium(callPrem)} calls`}
+          </span>
+          <div className="flex-1 h-2 rounded-full overflow-hidden" style={{ background: "rgba(248,113,113,0.25)" }}>
+            <div
+              className="h-full rounded-full transition-all duration-700"
+              style={{ width: `${callPct}%`, background: "#4ade80", opacity: 0.85 }}
+            />
+          </div>
+          <span className="text-xs w-20" style={{ color: "#f87171" }}>
+            {loading ? "…" : `${fmtPremium(putPrem)} puts`}
+          </span>
+        </div>
+        <div className="flex justify-between mt-1">
+          <span className="text-[9px]" style={{ color: "rgba(74,222,128,0.5)" }}>{callPct}% bullish</span>
+          <span className="text-[9px]" style={{ color: "rgba(248,113,113,0.5)" }}>{100 - callPct}% bearish</span>
+        </div>
+      </div>
+
       {/* Filter tabs */}
-      <div className="flex gap-2">
+      <div className="flex gap-2 items-center">
         {(["All", "Bullish", "Bearish"] as Filter[]).map((f) => (
           <button
             key={f}
@@ -58,17 +115,17 @@ export default function OptionsFlow() {
             {f}
           </button>
         ))}
-        <span className="ml-auto text-[10px] self-center" style={{ color: "rgba(240,234,216,0.25)" }}>
-          {visible.length} entries
+        <span className="ml-auto text-[10px]" style={{ color: "rgba(240,234,216,0.25)" }}>
+          {loading ? "Loading…" : `${visible.length} contracts`}
         </span>
       </div>
 
-      {/* Table — scroll on mobile */}
+      {/* Table */}
       <div className="overflow-x-auto rounded-sm" style={{ border: "1px solid rgba(201,169,110,0.1)" }}>
         <table className="w-full text-xs" style={{ borderCollapse: "collapse" }}>
           <thead>
             <tr style={{ borderBottom: "1px solid rgba(201,169,110,0.1)", background: "rgba(201,169,110,0.03)" }}>
-              {["Time", "Ticker", "Type", "Strike", "Expiry", "Premium", "Volume", "OI", "Sentiment"].map((h) => (
+              {["Time", "Ticker", "Type", "Strike", "Expiry", "Premium", "Volume", "OI", "IV", "Sentiment"].map((h) => (
                 <th
                   key={h}
                   className="px-4 py-3 text-left text-[9px] tracking-[0.2em] uppercase font-medium whitespace-nowrap"
@@ -80,52 +137,76 @@ export default function OptionsFlow() {
             </tr>
           </thead>
           <tbody>
-            {visible.map((row, i) => (
-              <tr
-                key={i}
-                style={{
-                  borderBottom: "1px solid rgba(240,234,216,0.04)",
-                  background: i % 2 === 0 ? "transparent" : "rgba(240,234,216,0.01)",
-                }}
-              >
-                <td className="px-4 py-3 whitespace-nowrap" style={{ color: "rgba(240,234,216,0.35)" }}>{row.time}</td>
-                <td className="px-4 py-3 whitespace-nowrap font-semibold" style={{ color: "#E8D5A3" }}>{row.ticker}</td>
-                <td className="px-4 py-3 whitespace-nowrap">
-                  <span
-                    className="px-2 py-0.5 rounded-sm text-[9px] tracking-widest uppercase"
-                    style={{
-                      background: row.type === "Call" ? "rgba(74,222,128,0.1)" : "rgba(248,113,113,0.1)",
-                      color: row.type === "Call" ? "#4ade80" : "#f87171",
-                      border: `1px solid ${row.type === "Call" ? "rgba(74,222,128,0.25)" : "rgba(248,113,113,0.25)"}`,
-                    }}
-                  >
-                    {row.type}
-                  </span>
-                </td>
-                <td className="px-4 py-3 whitespace-nowrap" style={{ color: "rgba(240,234,216,0.6)" }}>{row.strike}</td>
-                <td className="px-4 py-3 whitespace-nowrap" style={{ color: "rgba(240,234,216,0.6)" }}>{row.expiry}</td>
-                <td className="px-4 py-3 whitespace-nowrap font-medium" style={{ color: "#C9A96E" }}>{row.premium}</td>
-                <td className="px-4 py-3 whitespace-nowrap" style={{ color: "rgba(240,234,216,0.6)" }}>{row.volume}</td>
-                <td className="px-4 py-3 whitespace-nowrap" style={{ color: "rgba(240,234,216,0.4)" }}>{row.oi}</td>
-                <td className="px-4 py-3 whitespace-nowrap">
-                  <span
-                    className="px-2 py-0.5 rounded-sm text-[9px] tracking-widest uppercase"
-                    style={{
-                      color: row.sentiment === "Bullish" ? "#4ade80" : row.sentiment === "Bearish" ? "#f87171" : "rgba(240,234,216,0.4)",
-                    }}
-                  >
-                    {row.sentiment === "Bullish" ? "▲ " : row.sentiment === "Bearish" ? "▼ " : ""}
-                    {row.sentiment}
-                  </span>
+            {loading ? (
+              [...Array(8)].map((_, i) => (
+                <tr key={i} style={{ borderBottom: "1px solid rgba(240,234,216,0.04)" }}>
+                  {[...Array(10)].map((_, j) => (
+                    <td key={j} className="px-4 py-3">
+                      <div className="h-3 rounded animate-pulse" style={{ background: "rgba(240,234,216,0.06)", width: j === 0 ? 32 : j === 5 ? 48 : 56 }} />
+                    </td>
+                  ))}
+                </tr>
+              ))
+            ) : visible.length === 0 ? (
+              <tr>
+                <td colSpan={10} className="px-4 py-10 text-center text-xs" style={{ color: "rgba(240,234,216,0.25)" }}>
+                  No significant flow detected. Markets may be closed.
                 </td>
               </tr>
-            ))}
+            ) : (
+              visible.map((row, i) => (
+                <tr
+                  key={`${row.ticker}-${row.strike}-${row.expiry}-${i}`}
+                  style={{
+                    borderBottom: "1px solid rgba(240,234,216,0.04)",
+                    background: i % 2 === 0 ? "transparent" : "rgba(240,234,216,0.01)",
+                  }}
+                >
+                  <td className="px-4 py-3 whitespace-nowrap">
+                    <div className="flex items-center gap-1.5">
+                      {row.isNew && <PulsingDot />}
+                      <span style={{ color: "rgba(240,234,216,0.35)" }}>{row.time}</span>
+                    </div>
+                  </td>
+                  <td className="px-4 py-3 whitespace-nowrap font-semibold" style={{ color: "#E8D5A3" }}>{row.ticker}</td>
+                  <td className="px-4 py-3 whitespace-nowrap">
+                    <span
+                      className="px-2 py-0.5 rounded-sm text-[9px] tracking-widest uppercase"
+                      style={{
+                        background: row.type === "Call" ? "rgba(74,222,128,0.1)" : "rgba(248,113,113,0.1)",
+                        color: row.type === "Call" ? "#4ade80" : "#f87171",
+                        border: `1px solid ${row.type === "Call" ? "rgba(74,222,128,0.25)" : "rgba(248,113,113,0.25)"}`,
+                      }}
+                    >
+                      {row.type}
+                    </span>
+                  </td>
+                  <td className="px-4 py-3 whitespace-nowrap">
+                    <span style={{ color: "rgba(240,234,216,0.6)" }}>{row.strike}</span>
+                    {row.itm && (
+                      <span className="ml-1.5 text-[8px] tracking-widest uppercase" style={{ color: "rgba(201,169,110,0.4)" }}>ITM</span>
+                    )}
+                  </td>
+                  <td className="px-4 py-3 whitespace-nowrap" style={{ color: "rgba(240,234,216,0.6)" }}>{row.expiry}</td>
+                  <td className="px-4 py-3 whitespace-nowrap font-medium" style={{ color: "#C9A96E" }}>{row.premium}</td>
+                  <td className="px-4 py-3 whitespace-nowrap" style={{ color: "rgba(240,234,216,0.6)" }}>{row.volume}</td>
+                  <td className="px-4 py-3 whitespace-nowrap" style={{ color: "rgba(240,234,216,0.4)" }}>{row.oi}</td>
+                  <td className="px-4 py-3 whitespace-nowrap" style={{ color: "rgba(240,234,216,0.5)" }}>{row.iv}</td>
+                  <td className="px-4 py-3 whitespace-nowrap">
+                    <span style={{ color: row.sentiment === "Bullish" ? "#4ade80" : "#f87171" }}>
+                      {row.sentiment === "Bullish" ? "▲ " : "▼ "}
+                      {row.sentiment}
+                    </span>
+                  </td>
+                </tr>
+              ))
+            )}
           </tbody>
         </table>
       </div>
 
       <p className="text-[10px] text-center" style={{ color: "rgba(240,234,216,0.2)" }}>
-        Sample data — live flow requires an options data API (Unusual Whales, Tradier, etc.)
+        Live · High-volume options scanner · Sorted by dollar premium · Refreshes every 2 min
       </p>
     </div>
   );
