@@ -51,7 +51,7 @@ function FearGreedGauge({ score }: { score: number }) {
   const needleDeg = -180 + (s / 100) * 180;
   const start     = pt(-180); // (20, 100)
   const nEnd      = pt(needleDeg);
-  const dot       = pt(needleDeg, R - 5);
+  const dot       = pt(needleDeg, R);
 
   // Full track
   const trackPath = `M ${start.x} ${start.y} A ${R} ${R} 0 0 1 ${pt(0).x} ${pt(0).y}`;
