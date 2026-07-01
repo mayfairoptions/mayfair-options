@@ -49,12 +49,14 @@ function fmtRevenue(n: number | null) {
   return `$${n.toFixed(0)}`;
 }
 
-export default function NewsFeed() {
+type NewsData = { news: LiveNewsItem[]; earnings: LiveEarnings[]; ts: number };
+
+export default function NewsFeed({ initialData }: { initialData?: NewsData | null }) {
   const [tab, setTab] = useState<Tab>("news");
   const [category, setCategory] = useState<Category>("All");
-  const [news, setNews] = useState<LiveNewsItem[]>([]);
-  const [earnings, setEarnings] = useState<LiveEarnings[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [news, setNews] = useState<LiveNewsItem[]>(initialData?.news ?? []);
+  const [earnings, setEarnings] = useState<LiveEarnings[]>(initialData?.earnings ?? []);
+  const [loading, setLoading] = useState(!initialData);
 
   useEffect(() => {
     async function load() {
@@ -69,9 +71,10 @@ export default function NewsFeed() {
         setLoading(false);
       }
     }
-    load();
+    if (!initialData) load();
     const id = setInterval(load, 5 * 60_000);
     return () => clearInterval(id);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const filteredNews = news.filter((n) => category === "All" || n.category === category);

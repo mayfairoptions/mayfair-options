@@ -1,6 +1,18 @@
 import OptionsFlow from "@/components/dashboard/OptionsFlow";
+import { getOptionsFlowData } from "@/app/api/options-flow/route";
+import type { FlowPayload } from "@/app/api/options-flow/route";
 
-export default function FlowPage() {
+async function prefetch<T>(fn: () => Promise<T>, ms = 2000): Promise<T | null> {
+  try {
+    return await Promise.race([fn(), new Promise<null>(r => setTimeout(() => r(null), ms))]);
+  } catch {
+    return null;
+  }
+}
+
+export default async function FlowPage() {
+  const initialData: FlowPayload | null = await prefetch(getOptionsFlowData);
+
   return (
     <div className="p-4 md:p-8 max-w-6xl">
       <div className="mb-8">
@@ -12,7 +24,7 @@ export default function FlowPage() {
           Unusual options activity — large premium prints and sweeps across major tickers.
         </p>
       </div>
-      <OptionsFlow />
+      <OptionsFlow initialData={initialData} />
     </div>
   );
 }

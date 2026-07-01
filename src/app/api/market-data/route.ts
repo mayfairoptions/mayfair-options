@@ -12,12 +12,25 @@ const SYMBOLS = [
   "XLK", "XLC", "XLY", "XLI", "XLF", "XLV", "XLRE", "XLB", "XLU", "XLP", "XLE",
 ];
 
+let mdCache: { data: MarketDataPayload; ts: number } | null = null;
+const MD_TTL = 60_000;
+
+export type MarketDataPayload = {
+  quotes: Record<string, { price: number; change: number; changePercent: number }>;
+  fearGreed: { score: number; rating: string; previousClose: number; previousWeek: number; previousMonth: number } | null;
+  ts: number;
+};
+
+export async function getMarketData(): Promise<MarketDataPayload> {
+  if (mdCache && Date.now() - mdCache.ts < MD_TTL) return mdCache.data;
+  const [quotes, fearGreed] = await Promise.all([fetchQuotes(), fetchFearGreed()]);
+  const data: MarketDataPayload = { quotes, fearGreed, ts: Date.now() };
+  mdCache = { data, ts: Date.now() };
+  return data;
+}
+
 export async function GET() {
-  const [quotes, fearGreed] = await Promise.all([
-    fetchQuotes(),
-    fetchFearGreed(),
-  ]);
-  return Response.json({ quotes, fearGreed, ts: Date.now() });
+  return Response.json(await getMarketData());
 }
 
 async function fetchQuotes() {

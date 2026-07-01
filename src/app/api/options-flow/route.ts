@@ -48,10 +48,10 @@ const MIN_IV      = 0.05; // 5% — filters out meaningless deep-ITM near-expiry
 let cache: { data: object; ts: number } | null = null;
 const CACHE_TTL = 60_000;
 
-export async function GET() {
-  if (cache && Date.now() - cache.ts < CACHE_TTL) {
-    return Response.json(cache.data);
-  }
+export type FlowPayload = { flow: FlowItem[]; callPremium: number; putPremium: number; ts: number };
+
+export async function getOptionsFlowData(): Promise<FlowPayload> {
+  if (cache && Date.now() - cache.ts < CACHE_TTL) return cache.data as FlowPayload;
 
   const results = await Promise.allSettled(TICKERS.map(fetchTicker));
   const all: FlowItem[] = [];
@@ -59,17 +59,19 @@ export async function GET() {
     if (r.status === "fulfilled") all.push(...r.value);
   }
 
-  // Sort by premium descending, take top 40
   all.sort((a, b) => b.premiumRaw - a.premiumRaw);
   const flow = all.slice(0, 40);
 
-  // Summary stats
   const callPremium = flow.filter(f => f.type === "Call").reduce((s, f) => s + f.premiumRaw, 0);
   const putPremium  = flow.filter(f => f.type === "Put").reduce((s, f) => s + f.premiumRaw, 0);
 
-  const data = { flow, callPremium, putPremium, ts: Date.now() };
+  const data: FlowPayload = { flow, callPremium, putPremium, ts: Date.now() };
   cache = { data, ts: Date.now() };
-  return Response.json(data);
+  return data;
+}
+
+export async function GET() {
+  return Response.json(await getOptionsFlowData());
 }
 
 async function fetchTicker(ticker: string): Promise<FlowItem[]> {

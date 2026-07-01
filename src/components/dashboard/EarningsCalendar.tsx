@@ -36,11 +36,11 @@ function SkeletonRow() {
   );
 }
 
-export default function EarningsCalendar() {
+export default function EarningsCalendar({ initialData }: { initialData?: CalendarData | null }) {
   const [tab,     setTab]     = useState<Tab>("earnings");
   const [week,    setWeek]    = useState<Week>("this");
-  const [data,    setData]    = useState<CalendarData | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [data,    setData]    = useState<CalendarData | null>(initialData ?? null);
+  const [loading, setLoading] = useState(!initialData);
 
   useEffect(() => {
     async function load() {
@@ -51,9 +51,10 @@ export default function EarningsCalendar() {
         setLoading(false);
       }
     }
-    load();
+    if (!initialData) load();
     const id = setInterval(load, 15 * 60_000);
     return () => clearInterval(id);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const earnings: EarningItem[] = week === "this"

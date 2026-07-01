@@ -65,9 +65,21 @@ function sentiment(title: string): "bullish" | "bearish" | "neutral" {
   return "neutral";
 }
 
-export async function GET() {
+let newsCache: { data: NewsPayload; ts: number } | null = null;
+const NEWS_TTL = 5 * 60_000;
+
+export type NewsPayload = { news: LiveNewsItem[]; earnings: LiveEarnings[]; ts: number };
+
+export async function getNewsData(): Promise<NewsPayload> {
+  if (newsCache && Date.now() - newsCache.ts < NEWS_TTL) return newsCache.data;
   const [news, earnings] = await Promise.all([fetchNews(), fetchEarnings()]);
-  return Response.json({ news, earnings, ts: Date.now() });
+  const data: NewsPayload = { news, earnings, ts: Date.now() };
+  newsCache = { data, ts: Date.now() };
+  return data;
+}
+
+export async function GET() {
+  return Response.json(await getNewsData());
 }
 
 async function fetchNews(): Promise<LiveNewsItem[]> {

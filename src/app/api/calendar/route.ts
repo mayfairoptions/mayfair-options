@@ -63,14 +63,16 @@ const EARNINGS_TICKERS = [
 let cache: { data: CalendarData; ts: number } | null = null;
 const CACHE_TTL = 15 * 60_000;
 
-export async function GET() {
-  if (cache && Date.now() - cache.ts < CACHE_TTL) {
-    return Response.json(cache.data);
-  }
+export async function getCalendarData(): Promise<CalendarData> {
+  if (cache && Date.now() - cache.ts < CACHE_TTL) return cache.data;
   const [earningsData, econData] = await Promise.all([fetchEarnings(), fetchEcon()]);
   const data: CalendarData = { ...earningsData, econ: econData, ts: Date.now() };
   cache = { data, ts: Date.now() };
-  return Response.json(data);
+  return data;
+}
+
+export async function GET() {
+  return Response.json(await getCalendarData());
 }
 
 // ── Helpers ───────────────────────────────────────────────────────

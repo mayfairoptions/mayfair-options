@@ -20,13 +20,15 @@ function PulsingDot() {
   );
 }
 
-export default function OptionsFlow() {
+type FlowData = { flow: FlowItem[]; callPremium: number; putPremium: number; ts: number };
+
+export default function OptionsFlow({ initialData }: { initialData?: FlowData | null }) {
   const [filter, setFilter]   = useState<Filter>("All");
-  const [flow, setFlow]       = useState<FlowItem[]>([]);
-  const [callPrem, setCallPrem] = useState(0);
-  const [putPrem, setPutPrem]   = useState(0);
-  const [loading, setLoading] = useState(true);
-  const [lastUpdate, setLastUpdate] = useState<Date | null>(null);
+  const [flow, setFlow]       = useState<FlowItem[]>(initialData?.flow ?? []);
+  const [callPrem, setCallPrem] = useState(initialData?.callPremium ?? 0);
+  const [putPrem, setPutPrem]   = useState(initialData?.putPremium ?? 0);
+  const [loading, setLoading] = useState(!initialData);
+  const [lastUpdate, setLastUpdate] = useState<Date | null>(initialData ? new Date(initialData.ts) : null);
 
   useEffect(() => {
     async function load() {
@@ -43,9 +45,10 @@ export default function OptionsFlow() {
         setLoading(false);
       }
     }
-    load();
-    const id = setInterval(load, 2 * 60_000); // refresh every 2 min
+    if (!initialData) load();
+    const id = setInterval(load, 2 * 60_000);
     return () => clearInterval(id);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const visible = filter === "All" ? flow : flow.filter((f) => f.sentiment === filter);

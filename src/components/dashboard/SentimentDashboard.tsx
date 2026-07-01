@@ -141,10 +141,10 @@ const smartMoney = [
 ];
 
 // ── Component ─────────────────────────────────────────────────────
-export default function SentimentDashboard() {
+export default function SentimentDashboard({ initialData }: { initialData?: MarketData | null }) {
   const [hovered, setHovered] = useState<string | null>(null);
-  const [data, setData] = useState<MarketData | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [data, setData] = useState<MarketData | null>(initialData ?? null);
+  const [loading, setLoading] = useState(!initialData);
 
   useEffect(() => {
     async function load() {
@@ -155,9 +155,11 @@ export default function SentimentDashboard() {
         setLoading(false);
       }
     }
-    load();
+    // Skip immediate fetch if we already have SSR data; poll starts after 60s
+    if (!initialData) load();
     const id = setInterval(load, 60_000);
     return () => clearInterval(id);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const quotes = data?.quotes ?? {};

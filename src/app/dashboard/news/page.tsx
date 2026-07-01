@@ -1,6 +1,18 @@
 import NewsFeed from "@/components/dashboard/NewsFeed";
+import { getNewsData } from "@/app/api/news/route";
+import type { NewsPayload } from "@/app/api/news/route";
 
-export default function NewsPage() {
+async function prefetch<T>(fn: () => Promise<T>, ms = 2000): Promise<T | null> {
+  try {
+    return await Promise.race([fn(), new Promise<null>(r => setTimeout(() => r(null), ms))]);
+  } catch {
+    return null;
+  }
+}
+
+export default async function NewsPage() {
+  const initialData: NewsPayload | null = await prefetch(getNewsData);
+
   return (
     <div className="p-4 md:p-8 max-w-4xl">
       <div className="mb-8">
@@ -12,7 +24,7 @@ export default function NewsPage() {
           Market-moving headlines and upcoming catalysts. Know the story behind every move.
         </p>
       </div>
-      <NewsFeed />
+      <NewsFeed initialData={initialData} />
     </div>
   );
 }
