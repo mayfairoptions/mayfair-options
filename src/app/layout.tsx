@@ -21,6 +21,10 @@ export const metadata: Metadata = {
   title: "Mayfair Options | Elite Options Trading Community",
   description:
     "An exclusive community of professional options traders. Institutional-grade analysis, live alerts, and verified performance.",
+  icons: {
+    icon: "/logo.png",
+    apple: "/logo.png",
+  },
 };
 
 export default function RootLayout({
