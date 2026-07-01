@@ -133,12 +133,6 @@ const SECTORS = [
 ];
 
 
-const smartMoney = [
-  { label: "Institutional Buying", value: 72, color: "#4ade80" },
-  { label: "Retail Sentiment",     value: 61, color: "#C9A96E" },
-  { label: "Options Bullishness",  value: 68, color: "#93c5fd" },
-  { label: "Dark Pool Activity",   value: 54, color: "#C9A96E" },
-];
 
 // ── Component ─────────────────────────────────────────────────────
 export default function SentimentDashboard({ initialData }: { initialData?: MarketData | null }) {
@@ -263,14 +257,11 @@ export default function SentimentDashboard({ initialData }: { initialData?: Mark
         </div>
       </div>
 
-      {/* Row 3 — Trending + Smart Money */}
-      <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-
-        {/* Trending tickers */}
-        <div
-          className="rounded-sm p-5"
-          style={{ border: "1px solid rgba(201,169,110,0.1)", background: "rgba(8,13,26,0.6)" }}
-        >
+      {/* Row 3 — Trending tickers */}
+      <div
+        className="rounded-sm p-5"
+        style={{ border: "1px solid rgba(201,169,110,0.1)", background: "rgba(8,13,26,0.6)" }}
+      >
           <p className="mb-4 text-[9px] tracking-[0.25em] uppercase" style={{ color: "rgba(201,169,110,0.4)" }}>
             Trending on Yahoo Finance
           </p>
@@ -310,33 +301,6 @@ export default function SentimentDashboard({ initialData }: { initialData?: Mark
               })
             )}
           </div>
-        </div>
-
-        {/* Smart money bars */}
-        <div
-          className="rounded-sm p-5"
-          style={{ border: "1px solid rgba(201,169,110,0.1)", background: "rgba(8,13,26,0.6)" }}
-        >
-          <p className="mb-4 text-[9px] tracking-[0.25em] uppercase" style={{ color: "rgba(201,169,110,0.4)" }}>
-            Smart Money Positioning
-          </p>
-          <div className="flex flex-col gap-4">
-            {smartMoney.map((m) => (
-              <div key={m.label}>
-                <div className="flex justify-between mb-1.5">
-                  <span className="text-xs" style={{ color: "rgba(240,234,216,0.5)" }}>{m.label}</span>
-                  <span className="text-xs font-medium" style={{ color: m.color }}>{m.value}%</span>
-                </div>
-                <div className="h-1.5 rounded-full overflow-hidden" style={{ background: "rgba(240,234,216,0.06)" }}>
-                  <div
-                    className="h-full rounded-full transition-all duration-700"
-                    style={{ width: `${m.value}%`, background: m.color, opacity: 0.7 }}
-                  />
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
       </div>
 
       {/* Timestamp */}
