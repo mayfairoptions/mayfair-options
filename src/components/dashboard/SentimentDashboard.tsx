@@ -10,9 +10,11 @@ type FearGreed = {
   previousWeek: number;
   previousMonth: number;
 };
+type TrendingTicker = { sym: string; price: number; change: number; changePercent: number };
 type MarketData = {
   quotes: Record<string, Quote>;
   fearGreed: FearGreed | null;
+  trending: TrendingTicker[];
   ts: number;
 };
 
@@ -130,8 +132,6 @@ const SECTORS = [
   { name: "Energy",      ticker: "XLE"  },
 ];
 
-const TRENDING_SYMBOLS = ["NVDA", "SPY", "TSLA", "AAPL", "QQQ", "^VIX"];
-const TRENDING_LABELS: Record<string, string> = { "^VIX": "VIX" };
 
 const smartMoney = [
   { label: "Institutional Buying", value: 72, color: "#4ade80" },
@@ -272,27 +272,43 @@ export default function SentimentDashboard({ initialData }: { initialData?: Mark
           style={{ border: "1px solid rgba(201,169,110,0.1)", background: "rgba(8,13,26,0.6)" }}
         >
           <p className="mb-4 text-[9px] tracking-[0.25em] uppercase" style={{ color: "rgba(201,169,110,0.4)" }}>
-            Trending Tickers
+            Trending on Yahoo Finance
           </p>
           <div className="flex flex-col gap-2.5">
-            {TRENDING_SYMBOLS.map((sym) => {
-              const q = quotes[sym];
-              const pct = q?.changePercent ?? 0;
-              const label = TRENDING_LABELS[sym] ?? sym;
-              const isBullish = pct >= 0;
-              const dotColor = isBullish ? "#4ade80" : "#f87171";
-              return (
-                <div key={sym} className="flex items-center justify-between gap-3">
+            {loading ? (
+              [...Array(6)].map((_, i) => (
+                <div key={i} className="flex items-center justify-between gap-3 animate-pulse">
                   <div className="flex items-center gap-2.5">
-                    <span className="h-2 w-2 rounded-full shrink-0" style={{ background: dotColor }} />
-                    <span className="text-sm font-medium" style={{ color: "#E8D5A3" }}>{label}</span>
+                    <span className="h-2 w-2 rounded-full shrink-0" style={{ background: "rgba(240,234,216,0.1)" }} />
+                    <span className="h-3 w-16 rounded" style={{ background: "rgba(240,234,216,0.06)" }} />
                   </div>
-                  <span className="text-xs font-medium" style={{ color: dotColor }}>
-                    {loading ? "…" : (q ? fmtChg(pct) : "—")}
-                  </span>
+                  <span className="h-3 w-10 rounded" style={{ background: "rgba(240,234,216,0.04)" }} />
                 </div>
-              );
-            })}
+              ))
+            ) : (data?.trending ?? []).length === 0 ? (
+              <p className="text-xs" style={{ color: "rgba(240,234,216,0.25)" }}>No trending data available.</p>
+            ) : (
+              (data?.trending ?? []).map((t) => {
+                const isBullish = t.changePercent >= 0;
+                const dotColor = isBullish ? "#4ade80" : "#f87171";
+                return (
+                  <div key={t.sym} className="flex items-center justify-between gap-3">
+                    <div className="flex items-center gap-2.5">
+                      <span className="h-2 w-2 rounded-full shrink-0" style={{ background: dotColor }} />
+                      <span className="text-sm font-medium" style={{ color: "#E8D5A3" }}>{t.sym}</span>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <span className="text-xs" style={{ color: "rgba(240,234,216,0.4)" }}>
+                        {t.price > 0 ? `$${t.price.toFixed(t.price < 10 ? 2 : 0)}` : "—"}
+                      </span>
+                      <span className="text-xs font-medium" style={{ color: dotColor }}>
+                        {fmtChg(t.changePercent)}
+                      </span>
+                    </div>
+                  </div>
+                );
+              })
+            )}
           </div>
         </div>
 
