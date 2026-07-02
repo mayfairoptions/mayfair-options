@@ -129,7 +129,7 @@ export default function AnalystTracker() {
                   {a.initials}
                 </div>
                 <div>
-                  <div className="text-sm font-medium" style={{ color: "#F0EAD8" }}>{a.name}</div>
+                  <div className="text-sm font-medium" style={{ color: "#E8D5A3" }}>{a.name}</div>
                   <div className="text-[10px]" style={{ color: "rgba(240,234,216,0.3)" }}>{a.handle}</div>
                 </div>
               </div>
@@ -197,7 +197,7 @@ export default function AnalystTracker() {
                     {a.initials}
                   </div>
                   <div>
-                    <div className="text-sm font-medium" style={{ color: "#F0EAD8" }}>{a.name}</div>
+                    <div className="text-sm font-medium" style={{ color: "#E8D5A3" }}>{a.name}</div>
                     <div className="text-[10px]" style={{ color: "rgba(240,234,216,0.35)" }}>{a.specialty}</div>
                   </div>
                 </div>
