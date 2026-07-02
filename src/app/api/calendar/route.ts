@@ -201,7 +201,7 @@ type FFEvent = {
 function parseFF(raw: FFEvent[] | null): EconEvent[] {
   if (!raw) return [];
   return raw
-    .filter((e) => e.country === "USD" && e.impact !== "")
+    .filter((e) => e.country === "USD" && ["High", "Medium", "Low"].includes(e.impact))
     .map((e) => {
       const d = new Date(e.date);
       const timeEt = d.toLocaleTimeString("en-US", {
