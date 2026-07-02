@@ -192,7 +192,7 @@ export default function BestPlays() {
                     {t.initials}
                   </div>
                   <div>
-                    <div className="text-xs" style={{ color: "rgba(240,234,216,0.6)" }}>{t.analyst}</div>
+                    <div className="text-xs" style={{ color: "#E8D5A3" }}>{t.analyst}</div>
                     <div className="text-[10px]" style={{ color: "rgba(240,234,216,0.25)" }}>Lead Analyst</div>
                   </div>
                 </div>
