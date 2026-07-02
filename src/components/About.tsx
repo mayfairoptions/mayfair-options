@@ -96,10 +96,13 @@ export default function About() {
             {pillars.map((p, i) => (
               <div
                 key={p.num}
-                className="flex gap-8 py-8 transition-all duration-300 group"
+                className="flex gap-8 py-8 transition-all duration-300 group cursor-default"
                 style={{
                   borderBottom: "1px solid rgba(201,169,110,0.1)",
+                  background: "transparent",
                 }}
+                onMouseEnter={e => (e.currentTarget.style.background = "rgba(201,169,110,0.04)")}
+                onMouseLeave={e => (e.currentTarget.style.background = "transparent")}
               >
                 <span
                   className="shrink-0 text-xs font-mono pt-0.5"
