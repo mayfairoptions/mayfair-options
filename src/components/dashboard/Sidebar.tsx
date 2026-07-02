@@ -203,7 +203,7 @@ function NavItem({ link, active }: { link: NavLink; active: boolean }) {
       className="flex items-center gap-3 rounded-sm px-3 py-2.5 text-xs tracking-wide transition-all duration-200"
       style={{
         background: active ? "rgba(201,169,110,0.1)" : "transparent",
-        color: active ? "#C9A96E" : "#E8D5A3",
+        color: active ? "#C9A96E" : "rgba(240,234,216,0.5)",
         borderLeft: active ? "2px solid #C9A96E" : "2px solid transparent",
       }}
     >
@@ -316,7 +316,7 @@ export default function Sidebar({ isPremium }: { isPremium: boolean }) {
               key={l.href}
               href={l.href}
               className="flex flex-col items-center gap-1 flex-1 py-1 transition-all duration-200"
-              style={{ color: active ? "#C9A96E" : "#E8D5A3" }}
+              style={{ color: active ? "#C9A96E" : "rgba(240,234,216,0.35)" }}
             >
               {l.icon}
               <span className="text-[9px] tracking-wide">{l.shortLabel}</span>
@@ -328,7 +328,7 @@ export default function Sidebar({ isPremium }: { isPremium: boolean }) {
         <button
           onClick={() => setDrawerOpen(true)}
           className="flex flex-col items-center gap-1 flex-1 py-1 transition-all duration-200"
-          style={{ color: drawerOpen ? "#C9A96E" : "#E8D5A3" }}
+          style={{ color: drawerOpen ? "#C9A96E" : "rgba(240,234,216,0.35)" }}
         >
           <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" />
@@ -377,7 +377,7 @@ export default function Sidebar({ isPremium }: { isPremium: boolean }) {
                 className="flex items-center gap-3 px-3 py-3 rounded-sm text-sm transition-all duration-200"
                 style={{
                   background: isActive(overview.href) ? "rgba(201,169,110,0.1)" : "transparent",
-                  color: isActive(overview.href) ? "#C9A96E" : "#E8D5A3",
+                  color: isActive(overview.href) ? "#C9A96E" : "rgba(240,234,216,0.6)",
                   borderLeft: isActive(overview.href) ? "2px solid #C9A96E" : "2px solid transparent",
                 }}
               >
@@ -398,7 +398,7 @@ export default function Sidebar({ isPremium }: { isPremium: boolean }) {
                       className="flex items-center gap-3 px-3 py-3 rounded-sm text-sm transition-all duration-200"
                       style={{
                         background: isActive(l.href) ? "rgba(201,169,110,0.1)" : "transparent",
-                        color: isActive(l.href) ? "#C9A96E" : "#E8D5A3",
+                        color: isActive(l.href) ? "#C9A96E" : "rgba(240,234,216,0.5)",
                         borderLeft: isActive(l.href) ? "2px solid #C9A96E" : "2px solid transparent",
                       }}
                     >
