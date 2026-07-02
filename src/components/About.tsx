@@ -110,7 +110,7 @@ export default function About() {
                 <div>
                   <h3
                     className="mb-3 text-sm font-medium tracking-wide"
-                    style={{ color: "#E8D5A3" }}
+                    style={{ color: "#F0EAD8" }}
                   >
                     {p.title}
                   </h3>
