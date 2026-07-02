@@ -69,9 +69,9 @@ export default function Navbar() {
                 key={l.href}
                 href={l.href}
                 className="text-xs tracking-widest uppercase transition-colors duration-300"
-                style={{ color: "#ffffff", letterSpacing: "0.12em" }}
+                style={{ color: "#F0EAD8", letterSpacing: "0.12em" }}
                 onMouseEnter={e => (e.currentTarget.style.color = "#C9A96E")}
-                onMouseLeave={e => (e.currentTarget.style.color = "#ffffff")}
+                onMouseLeave={e => (e.currentTarget.style.color = "#F0EAD8")}
               >
                 {l.label}
               </a>
